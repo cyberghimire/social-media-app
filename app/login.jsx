@@ -9,6 +9,7 @@ import Input from '../components/Input'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { theme } from '../constants/theme'
 import { hp, wp } from '../helpers/common'
+import { supabase } from '../lib/supabase'
 
 const Login = () => {
     const router= useRouter();
@@ -20,6 +21,16 @@ const Login = () => {
         if(!emailRef.current || !passwordRef.current){
             Alert.alert('Login', 'Please fill all the fields!')
             return;
+        }
+        let email = emailRef.current.trim();
+        let password = passwordRef.current.trim();
+        setLoading(true);
+        const {error}= await supabase.auth.signIn({
+            email, password
+        })
+        setLoading(false);
+        if(error){
+            Alert.alert('Login', error.message);
         }
     }
 

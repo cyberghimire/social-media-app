@@ -9,6 +9,7 @@ import Input from '../components/Input'
 import ScreenWrapper from '../components/ScreenWrapper'
 import { theme } from '../constants/theme'
 import { hp, wp } from '../helpers/common'
+import { supabase } from '../lib/supabase'
 
 const SignUp = () => {
     const router= useRouter();
@@ -21,6 +22,42 @@ const SignUp = () => {
         if(!emailRef.current || !passwordRef.current){
             Alert.alert('Sign Up', 'Please fill all the fields!')
             return;
+        }
+        let name = nameRef.current.trim();
+        let email = emailRef.current.trim();
+        let password = passwordRef.current.trim();
+
+        setLoading(true);
+
+        try {
+            const { session, error } = await supabase.auth.signUp({
+                email,
+                // options:  {
+                //     data: {
+                //         name: name
+                //     }
+                // },
+                password
+            });
+
+            // After signUp
+            await supabase.from('users').insert({
+                id: session.user.id,
+                name: name
+            });
+  
+
+            // if (error) {
+                // console.error('Signup error:', error);
+                // Optionally show an error message to the user
+            // } else {
+                // console.log('Signup success:', session);
+                // Alert('Signup Success', data)
+            // }
+        } catch (err) {
+            console.error('Unexpected error:', err);
+        } finally {
+            setLoading(false); // Always runs, even if an error is thrown
         }
     }
 
