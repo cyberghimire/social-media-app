@@ -1,6 +1,5 @@
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import React from 'react'
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import Button from '../components/Button'
 import ScreenWrapper from '../components/ScreenWrapper'
@@ -9,6 +8,8 @@ import { hp, wp } from '../helpers/common'
 
 const Welcome = () => {
     const router = useRouter();
+    
+
   return (
     <ScreenWrapper bg="white">
         <StatusBar style="dark"/>

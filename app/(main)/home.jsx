@@ -1,4 +1,3 @@
-import React from 'react'
 import { Alert, Button, StyleSheet, Text } from 'react-native'
 import ScreenWrapper from '../../components/ScreenWrapper'
 // import { useAuth } from '../../contexts/AuthContext'
@@ -15,14 +14,14 @@ const Home = () => {
       Alert.alert('Sign out', 'Error signing out');
     }
   }
-  const onDebug = () => {
-    router.push('/debug');
-  }
+  // const onDebug = () => {
+  //   router.push('/debug');
+  // }
   return (
     <ScreenWrapper>
       <Text>Home</Text>
       <Button title="logout" onPress={onLogout}/>
-      <Button title="debug" onPress={onDebug}/>
+      {/* <Button title="debug" onPress={onDebug}/> */}
     </ScreenWrapper>
   )
 }

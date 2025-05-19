@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import Icon from '../assets/icons'
 import BackButton from '../components/BackButton'
@@ -10,6 +10,7 @@ import ScreenWrapper from '../components/ScreenWrapper'
 import { theme } from '../constants/theme'
 import { hp, wp } from '../helpers/common'
 import { supabase } from '../lib/supabase'
+import { saveSession } from '../services/authService'
 
 const Login = () => {
     const router= useRouter();
@@ -25,9 +26,11 @@ const Login = () => {
         let email = emailRef.current.trim();
         let password = passwordRef.current.trim();
         setLoading(true);
-        const {error}= await supabase.auth.signIn({
-            email, password
-        })
+        const { user, session, error } = await supabase.auth.signIn({ email, password });
+        if (session) {
+            await saveSession(); // save manually
+        }
+
         setLoading(false);
         if(error){
             Alert.alert('Login', error.message);

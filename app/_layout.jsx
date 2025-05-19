@@ -1,8 +1,11 @@
+// v1
+
 // import { Stack, useRouter } from 'expo-router';
-// import React, { useEffect } from 'react';
+// import { useEffect } from 'react';
 // import 'react-native-url-polyfill/auto';
 // import { AuthProvider, useAuth } from '../contexts/AuthContext';
 // import { supabase } from '../lib/supabase';
+// import { getUserData } from '../services/userService';
 
 // const _layout = () => {
 //   return (
@@ -22,6 +25,7 @@
       
 //       if (session) {
 //         setAuth(session.user);
+//         updateUserData(session?.user);
 //         router.replace('/home');
 //       } else {
 //         setAuth(null);
@@ -29,12 +33,18 @@
 //       }
 //     });
   
-//     // return () => {
-//     //   listener?.subscription?.unsubscribe();
-//     // };
+//     return () => {
+//       listener?.subscription?.unsubscribe();
+//     };
 //   }, []);
 
-//   return <Stack screenOptions={{ headerShown: false }} />;
+//   const updateUserData = async (user) => {
+//     let res = await await getUserData(user?.id);
+//     console.log('got user data: ', res)
+
+//   }
+
+//   return (<Stack screenOptions={{ headerShown: false }} />);
 // };
 
 
@@ -115,21 +125,110 @@
 //v3
 
 
+// import { Stack, useRouter } from 'expo-router';
+// import { useEffect, useState } from 'react';
+// import { ActivityIndicator, View } from 'react-native';
+// import 'react-native-url-polyfill/auto';
+// import { AuthProvider, useAuth } from '../contexts/AuthContext';
+// import { supabase } from '../lib/supabase';
+// import { restoreSession } from '../services/authService';
+// import { getUserData } from '../services/userService';
+
+// const _layout = () => {
+//   return (
+//     <AuthProvider>
+//       <MainLayout/>
+//     </AuthProvider>
+//   )
+// }
+
+// const MainLayout = () => {
+
+//   const { user, setAuth, setUserData } = useAuth();
+//   const router = useRouter();
+//   const [isReady, setIsReady] = useState(false);
+
+//   useEffect(() => {
+//   const restore = async () => {
+//     await restoreSession();
+//     const session = supabase.auth.session();
+//     // console.log('Restored session:', session);
+//   };
+//   restore();
+// }, []);
+
+//   useEffect(() => {
+//     // 1. Check existing session on app start
+//     const checkInitialSession = async () => {
+//       const session = supabase.auth.session();
+//       setAuth(session?.user || null);
+//       setIsReady(true);
+//     };
+
+//     checkInitialSession();
+
+//     // 2. Set up auth state listener
+//     const { data: { subscription } } = supabase.auth.onAuthStateChange(
+//       async (event, session) => {
+//         setAuth(session?.user || null);
+//         updateUserData(session?.user)
+//       }
+//     );
+
+//     return () => subscription?.unsubscribe();
+//   }, []);
+
+//   const updateUserData = async (user) => {
+//     let res = await getUserData(user?.id);
+//     if(res.success) setUserData(res.data);
+
+//   }
+
+//   useEffect(() => {
+//     if (!isReady) return;
+    
+//     // Handle navigation based on auth state
+//     if (user) {
+//       router.replace('/home');
+//     } else {
+//       router.replace('/welcome');
+//     }
+//   }, [user]);
+
+//   if (!isReady) {
+//     return (
+//             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+//               <ActivityIndicator size="large" />
+//             </View>
+//           );;
+//   }
+
+//   return <Stack screenOptions={{ headerShown: false }}>
+//     <Stack.Screen name="(main)/home" />
+//      </Stack>;
+// };
+
+// export default _layout;
+
+
+//v4 
+
 import { Stack, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import 'react-native-url-polyfill/auto';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { restoreSession } from '../services/authService';
 import { getUserData } from '../services/userService';
 
 const _layout = () => {
   return (
     <AuthProvider>
-      <MainLayout/>
+      <MainLayout />
     </AuthProvider>
-  )
-}
+  );
+};
 
 const MainLayout = () => {
   const { user, setAuth, setUserData } = useAuth();
@@ -137,54 +236,62 @@ const MainLayout = () => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // 1. Check existing session on app start
-    const checkInitialSession = async () => {
+    const initAuth = async () => {
+      // 1. Restore session from AsyncStorage
+      await restoreSession();
+
+      // 2. Get current session after restore
       const session = supabase.auth.session();
       setAuth(session?.user || null);
-      setIsReady(true);
+
+      // 3. Load user data if logged in
+      if (session?.user) {
+        const res = await getUserData(session.user.id);
+        if (res.success) setUserData(res.data);
+      }
+
+      setIsReady(true); // app is ready to show screen
     };
 
-    checkInitialSession();
+    initAuth();
 
-    // 2. Set up auth state listener
+    // 4. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         setAuth(session?.user || null);
-        updateUserData(session?.user)
+        if (session?.user) {
+          const res = await getUserData(session.user.id);
+          if (res.success) setUserData(res.data);
+        }
       }
     );
 
     return () => subscription?.unsubscribe();
   }, []);
 
-  const updateUserData = async (user) => {
-    let res = await getUserData(user?.id);
-    if(res.success) setUserData(res.data);
-
-  }
-
   useEffect(() => {
     if (!isReady) return;
-    
-    // Handle navigation based on auth state
+
     if (user) {
       router.replace('/home');
     } else {
       router.replace('/welcome');
     }
-  }, [user, isReady]);
+  }, [isReady, user]);
 
   if (!isReady) {
     return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <ActivityIndicator size="large" />
-            </View>
-          );;
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
   }
 
-  return <Stack screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="debug" />
-  </Stack>;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(main)/home" />
+    </Stack>
+  );
 };
 
 export default _layout;
