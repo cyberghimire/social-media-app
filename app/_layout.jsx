@@ -247,7 +247,7 @@ const MainLayout = () => {
       // 3. Load user data if logged in
       if (session?.user) {
         const res = await getUserData(session.user.id);
-        if (res.success) setUserData(res.data);
+        if (res.success) setUserData({...res.data, email: session?.user.email});
       }
 
       setIsReady(true); // app is ready to show screen
@@ -258,10 +258,11 @@ const MainLayout = () => {
     // 4. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        // console.log('session user: ', session?.user.email);
         setAuth(session?.user || null);
         if (session?.user) {
           const res = await getUserData(session.user.id);
-          if (res.success) setUserData(res.data);
+          if (res.success) setUserData({...res.data, email: session.user.email} );
         }
       }
     );
@@ -277,7 +278,7 @@ const MainLayout = () => {
     } else {
       router.replace('/welcome');
     }
-  }, [isReady, user]);
+  }, [isReady, user, router]);
 
   if (!isReady) {
     return (

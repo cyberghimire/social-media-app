@@ -1,11 +1,10 @@
-import React from 'react'
 import { StyleSheet, TextInput, View } from 'react-native'
 import { theme } from '../constants/theme'
 import { hp, wp } from '../helpers/common'
 
 const Input = (props) => {
   return (
-    <View style={[styles.container, props.containerStyles && props.containerStyles]}>
+    <View style={[styles.container, props.containerStyle && props.containerStyle]}>
       {
         props.icon && props.icon
       }
@@ -15,7 +14,7 @@ const Input = (props) => {
   )
 }
 
-export default Input
+export default Input;
 
 const styles = StyleSheet.create({
     container: {

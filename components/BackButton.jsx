@@ -1,4 +1,3 @@
-import React from 'react'
 import { Pressable, StyleSheet } from 'react-native'
 import Icon from '../assets/icons'
 import { theme } from '../constants/theme'
