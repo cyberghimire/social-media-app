@@ -11,7 +11,7 @@ import { hp, wp } from '../../helpers/common';
 const Home = () => {
   const {user} = useAuth();
   const router = useRouter();
-  console.log(user);
+  // console.log(user);
   // const onLogout = async () => {
   //   // setAuth(null);
   //   const {error} = await supabase.auth.signOut();
