@@ -1,6 +1,7 @@
-import { Video } from 'expo-av';
+// import { Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useRef, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from '../../assets/icons';
@@ -97,6 +98,17 @@ const NewPost = () => {
 
 
   }
+
+
+const videoUri = getFileType(file) === 'video' ? getFileUri(file) : null;
+
+const videoPlayer = useVideoPlayer(videoUri, (player) => {
+  if (player && videoUri) {
+    player.loop = true;
+    player.play();
+  }
+});
+
   return (
     <ScreenWrapper bg="white">
 
@@ -126,15 +138,10 @@ const NewPost = () => {
                   <View style= {styles.file}>
                     {
                       getFileType(file) === 'video' ? (
-                        <Video 
-                        style={{flex: 1}}
-                        source={{
-                          uri: getFileUri(file)
-                        }}
-                        useNativeControls
-                        resizeMode='cover'
-                        isLooping
-                        />
+                        <VideoView
+                        style={{ flex: 1 }}
+                        player={videoPlayer}
+                      />
                       ): (
                         <Image source={{uri: getFileUri(file)}} resizeMode='cover' style={{flex: 1}}/>
                       )
