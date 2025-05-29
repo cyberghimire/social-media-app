@@ -97,7 +97,7 @@ const EditProfile = () => {
                     </Pressable>
                 </View>
                 <Text style={{fontSize: hp(1.5), color: theme.colors.text}}>
-                    Please fill our your profile details
+                    Fill out your profile details:
                 </Text>
                 {/* name */}
                 <Input 

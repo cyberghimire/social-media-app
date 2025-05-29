@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import React, { useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 import Icon from '../assets/icons'
 import BackButton from '../components/BackButton'
@@ -74,7 +74,7 @@ const SignUp = () => {
         {/* form  */}
          <View style={styles.form}>
             <Text style={{fontSize: hp(1.5), color: theme.colors.text}}>
-                Please fill the details to create an account
+                Fill the details to create an account
             </Text>
             <Input icon={<Icon name="user" size={26} strokeWidth={1.6}/>}
             placeholder="Enter your Name" onChangeText={value=> nameRef.current = value}/>

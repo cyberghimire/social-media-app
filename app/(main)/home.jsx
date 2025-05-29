@@ -21,6 +21,8 @@ const Home = () => {
 
   const [posts, setPosts] = useState([]);
 
+  const [hasMore, setHasMore] = useState(true);
+
   const handlePostEvent = async (payload) => {
     if(payload.eventType === 'INSERT' && payload?.new?.id){
       let newPost = {...payload.new};
@@ -44,20 +46,146 @@ const Home = () => {
     .subscribe();
 
 
-    getPosts();
+    // getPosts();
 
     return () => {
       // supabase.removeChannel(postChannel);
       supabase.removeSubscription(subscription);
+      
     }
   }, []);
 
+  // const handleAddComment = async (payload) => {
+  //   console.log('payload: ', payload)
+  // }
+
+  // useEffect(() => {
+  //   let commentAddSubscription = supabase
+  //   .from('comments')
+  //   .on('INSERT', handleAddComment)
+  //   .subscribe();
+
+
+  //   return () => {
+  //     supabase.removeSubscription(commentAddSubscription);
+  //   }
+  // }, [])
+
+
+
+// Experiment 
+// In your Home component
+// useEffect(() => {
+//   // Initial fetch
+//   getPosts();
+
+//   // Set up subscriptions
+//   const subscriptions = [
+//     supabase
+//       .from('likes')
+//       .on('*', handleLikeChange)
+//       .subscribe(),
+//     supabase
+//       .from('comments')
+//       .on('*', handleCommentChange)
+//       .subscribe(),
+//     supabase
+//       .from('posts')
+//       .on('INSERT', handleNewPost)
+//       .subscribe()
+//   ];
+
+//   return () => {
+//     subscriptions.forEach(sub => supabase.removeSubscription(sub));
+//   };
+// }, []);
+
+// const handleLikeChange = async (payload) => {
+//   const postId = payload.new?.post_id || payload.old?.post_id;
+//   if (!postId) return;
+
+//   if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+//     await updateLikeCount(postId);
+//   }
+// };
+
+// const handleCommentChange = async (payload) => {
+//   const postId = payload.new?.post_id || payload.old?.post_id;
+//   if (!postId) return;
+
+//   if (payload.eventType === 'INSERT' || payload.eventType === 'DELETE') {
+//     await updateCommentCount(postId);
+//   }
+// };
+
+// // Update like count for a specific post
+// const updateLikeCount = async (postId) => {
+//   // Get updated like count
+//   const { count, error } = await supabase
+//     .from('likes')
+//     .select('*', { count: 'exact', head: true })
+//     .eq('post_id', postId);
+
+//   if (!error) {
+//     setPosts(prevPosts =>
+//       prevPosts.map(post =>
+//         post.id === postId
+//           ? {
+//               ...post,
+//               likes_count: count,
+//               // Update is_liked status if needed
+//               // is_liked: payload?.eventType === 'INSERT' 
+//               //   ? true  // or your specific logic
+//               //   : payload?.eventType === 'DELETE'
+//               //   ? false
+//               //   : post.is_liked
+//             }
+//           : post
+//       )
+//     );
+//   }
+// };
+
+// // Update comment count for a specific post
+// const updateCommentCount = async (postId) => {
+//   // Get updated comment count
+//   const { count, error } = await supabase
+//     .from('comments')
+//     .select('*', { count: 'exact', head: true })
+//     .eq('post_id', postId);
+
+//   if (!error) {
+//     setPosts(prevPosts =>
+//       prevPosts.map(post =>
+//         post.id === postId
+//           ? { ...post, comments_count: count }
+//           : post
+//       )
+//     );
+//   }
+// };
+
+// const handleNewPost = async (payload) => {
+//   if (payload.eventType === 'INSERT' && payload.new?.id) {
+//     const newPost = { ...payload.new };
+//     const res = await getUserData(newPost.user_id);
+//     if (res.success) {
+//       newPost.user = res.data;
+//       setPosts(prevPosts => [newPost, ...prevPosts]);
+//     }
+//   }
+// };
+// end
+
+
   const getPosts = async () => {
     // call the api here
-    limit = limit + 10;
+    if(!hasMore) return null;
+    limit = limit + 4;
     console.log('fetching post: ', limit);
     let res = await fetchPosts(limit);
     if(res.success){
+      if(posts.length === res.data.length) setHasMore(false);
       setPosts(res.data);
     }
   }
@@ -91,10 +219,19 @@ const Home = () => {
           router={router}
           />
         }
-        ListFooterComponent={(
+        onEndReached={() => {
+          getPosts();
+          console.log('got to the end')
+        }}
+        onEndReachedThreshold={0}
+        ListFooterComponent={( hasMore? (
           <View style={{marginVertical: posts.length=== 0 ? 200: 30}}>
             <Loading/>
-          </View>
+          </View>):(
+            <View style={{marginVertical: 30}}>
+              <Text style={styles.noPosts}> No more posts </Text>
+              </View>
+          )
         )}
         />
       </View>
@@ -102,7 +239,7 @@ const Home = () => {
   )
 }
 
-export default Home
+export default Home;
 
 const styles = StyleSheet.create({
     avatarImage: {

@@ -1,13 +1,19 @@
 import { Image } from 'expo-image'
+import * as MediaLibrary from 'expo-media-library'
 import { useVideoPlayer, VideoView } from 'expo-video'
 import moment from 'moment'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useEffect, useState } from 'react'
+import { Alert, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import RenderHTML from 'react-native-render-html'
 import Icon from '../assets/icons'
 import { theme } from '../constants/theme'
-import { hp, wp } from '../helpers/common'
-import { getSupabaseFileUrl } from '../services/imageService'
+import { hp, stripHtmlTags, wp } from '../helpers/common'
+import { downloadFile, getSupabaseFileUrl } from '../services/imageService'
+import { createPostLike, removePostLike } from '../services/postService'
 import Avatar from './Avatar'
+
+import * as Sharing from 'expo-sharing'
+import Loading from './Loading'
 
 const textStyle = {
         color: theme.colors.dark,
@@ -29,7 +35,8 @@ const PostCard = ({
     item,
     currentUser,
     router,
-    hasShadow=true
+    hasShadow=true,
+    showMoreIcon=true,
 }) => {
     const shadowStyles = {
         shadowOffset: {
@@ -41,8 +48,48 @@ const PostCard = ({
         elevation: 1
     }
 
+    const [likes, setLikes] = useState([]);
+
+    const [loading, setLoading] = useState(false);
+
+
+    useEffect(() => {
+        setLikes(item?.postLikes)
+    }, [])
+
     const openPostDetails = () => {
         //later
+        if(!showMoreIcon) return null;
+        router.push({pathname: 'postDetails', params: {postId: item?.id}})
+    }
+
+
+    const onLike = async () => {
+        if(liked){
+            //remove like
+            let updatedLikes = likes.filter(like => like.userId !== currentUser?.id)
+            setLikes([...updatedLikes])
+
+            let res = await removePostLike(item?.id, currentUser?.id);
+            console.log('removed like: ', res);
+            if(!res.success){
+                Alert.alert('Post', 'Something went wrong!');
+            }
+        } else{
+            //create like
+            let data = {
+            userId: currentUser?.id,
+            postId: item?.id
+            }
+            setLikes([...likes, data])
+
+            let res = await createPostLike(data);
+            console.log('added like: ', res);
+            if(!res.success){
+                Alert.alert('Post', 'Something went wrong!');
+            }
+        }
+        
     }
 
     const videoUri = getSupabaseFileUrl(item?.file)
@@ -54,8 +101,74 @@ const PostCard = ({
       }
     });
 
-    const likes = [];
-    const liked = false;
+    const onShare = async () => {
+        let content = { message: stripHtmlTags(item?.body) };
+
+        if (!item?.file){
+            await Share.share(content);
+        }
+
+        if (item?.file) {
+            //download the file then share the local URI
+            setLoading(true);
+            const fileUrl = getSupabaseFileUrl(item?.file).uri;
+            const localUri = await downloadFile(fileUrl);  // ✅ Await here
+
+            setLoading(false);
+            if (localUri) {
+            content.url = localUri;
+            } else {
+            Alert.alert("Share", "Failed to download the file.");
+            return;
+            }
+            if (!(await Sharing.isAvailableAsync())) {
+                Alert.alert("Sharing not available");
+                return;
+            }
+
+            try {
+                await Sharing.shareAsync(content.url);
+            } catch (error) {
+                console.error("Sharing error:", error);
+            }
+        }
+
+    };
+
+
+    const ensureMediaLibraryPermission = async () => {
+        const { status } = await MediaLibrary.getPermissionsAsync(); // check current status
+
+        if (status === 'granted') {
+            return true;
+        }
+
+        const { status: newStatus } = await MediaLibrary.requestPermissionsAsync(); // only ask if needed
+        return newStatus === 'granted';
+    };
+
+    const onSaveImage = async () => {
+        const fileUrl = getSupabaseFileUrl(item?.file).uri;
+        const fileUri = await downloadFile(fileUrl);
+        const hasPermission = await ensureMediaLibraryPermission();
+        if (!hasPermission) {
+                Alert.alert("Permission denied", "Cannot save image without permission.");
+                return;
+        }
+        try {
+            const asset = await MediaLibrary.createAssetAsync(fileUri);
+            await MediaLibrary.createAlbumAsync("LinkUp Downloads", asset, false);
+            Alert.alert("Success", "Image saved to your gallery.");
+        } catch (err) {
+            console.error("Error saving image:", err);
+            Alert.alert("Error", "Could not save image.");
+        }
+    };
+
+
+    
+
+    const liked = likes.filter(like => like.userId === currentUser?.id)[0]? true: false;
 
     const createdAt = moment(item?.created_at).format('MMM D Y');
 
@@ -75,10 +188,16 @@ const PostCard = ({
                         <Text style={styles.postTime}>{createdAt}</Text>
                     </View>
             </View>
+
+            {
+                showMoreIcon && (
+
+                    <TouchableOpacity onPress={openPostDetails}>
+                        <Icon name='threeDotsHorizontal' size={hp(3.4)} strokeWidth={3} color={theme.colors.text}/>
+                    </TouchableOpacity>
+                )
+            }
             
-            <TouchableOpacity onPress={openPostDetails}>
-                <Icon name='threeDotsHorizontal' size={hp(3.4)} strokeWidth={3} color={theme.colors.text}/>
-            </TouchableOpacity>
         </View>
         {/* post body and media  */}
         <View style={styles.content}>
@@ -125,7 +244,7 @@ const PostCard = ({
         {/* like, comment & share */}
         <View style={styles.footer}>
             <View style={styles.footerButton}>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={onLike}>
                     <Icon name="heart" size={24} fill={liked? theme.colors.rose: 'transparent'} color={liked? theme.colors.rose: theme.colors.textLight}/>
 
                 </TouchableOpacity>
@@ -136,22 +255,37 @@ const PostCard = ({
                 </Text>
             </View>
             <View style={styles.footerButton}>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={openPostDetails}>
                     <Icon name="comment" size={24} color={theme.colors.textLight}/>
 
                 </TouchableOpacity>
                 <Text style={styles.count}>
                     {
-                        0
+                        item?.comments[0].count
                     }
                 </Text>
             </View>
             <View style={styles.footerButton}>
-                <TouchableOpacity>
+                {
+                    loading? (
+                        <Loading size="small"/>
+                    ): (
+                <TouchableOpacity onPress={onShare}>
                     <Icon name="share" size={24} color={theme.colors.textLight}/>
 
                 </TouchableOpacity>
+                    )
+                }
             </View>
+            { item?.file && 
+            
+                <View style={styles.footerButton}>
+                    <TouchableOpacity onPress={onSaveImage}>
+                        <Icon name="download" size={24} color={theme.colors.textLight}/>
+
+                    </TouchableOpacity>
+                </View>
+            }
         </View>
     </View>
   )
