@@ -10,11 +10,12 @@ import { theme } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { hp, wp } from '../../helpers/common';
 import { supabase } from '../../lib/supabase';
+import { createNotification } from '../../services/notificationService';
 import { createComment, fetchPostDetails, removeComment, removePost } from '../../services/postService';
 import { getUserData } from '../../services/userService';
 
 const PostDetails = () => {
-    const {postId} = useLocalSearchParams();
+    const {postId, commentId} = useLocalSearchParams();
     const {user} = useAuth();
     const router = useRouter();
 
@@ -82,7 +83,16 @@ const PostDetails = () => {
         let res = await createComment(data);
         setLoading(false);
         if(res.success){
-          //send notification later
+          if(user.id !== post.userId){
+            //send notification
+            let notify = {
+              senderId: user.id,
+              receiverId: post.userId,
+              title: 'commented on your post',
+              data: JSON.stringify({postId: post.id, commentId: res?.data?.id})
+            }
+            createNotification(notify);
+          }
           inputRef?.current?.clear();
           commentRef.current = "";
         } else{
@@ -180,6 +190,7 @@ const PostDetails = () => {
               key={comment?.id?.toString()} 
               item={comment} 
               onDelete={onDeleteComment}
+              highlight={comment.id == commentId}
               canDelete={user.id === comment.userId || user.id === post.userId}/>
             })}
 
