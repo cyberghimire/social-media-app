@@ -232,7 +232,7 @@ const Home = () => {
       <View style={styles.container}>
         {/* header  */}
         <View style={styles.header}>
-            <Text style={styles.title}> LinkUp</Text>
+            <Text style={styles.title}> MemeWave!</Text>
             <View style={styles.icons}>
               <Pressable onPress={() => {
                 setNotificationCount(0);
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
     },
     title: {
         color: theme.colors.text,
-        fontSize: hp(3.2),
+        fontSize: hp(2.4),
         fontWeight: theme.fonts.bold,
     },
 });

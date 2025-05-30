@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "social-media-app",
-    "slug": "social-media-app",
+    "name": "MemeWave",
+    "slug": "memewave",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "socialmediaapp",
+    "scheme": "memewave",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,7 +16,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.aadarsha.memewave"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +38,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "395f6569-d975-48a1-acfa-1094a85a4a73"
+      }
     }
   }
 }
