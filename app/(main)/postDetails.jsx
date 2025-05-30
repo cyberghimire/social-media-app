@@ -10,7 +10,7 @@ import { theme } from '../../constants/theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { hp, wp } from '../../helpers/common';
 import { supabase } from '../../lib/supabase';
-import { createComment, fetchPostDetails, removeComment } from '../../services/postService';
+import { createComment, fetchPostDetails, removeComment, removePost } from '../../services/postService';
 import { getUserData } from '../../services/userService';
 
 const PostDetails = () => {
@@ -106,6 +106,21 @@ const PostDetails = () => {
       }
     }
 
+    const onDeletePost = async (item) => {
+      //delete post
+      let res = await removePost(post.id);
+      if(res.success){
+        router.back();
+      }else{
+        Alert.alert('Post', res.msg);
+      }
+    }
+
+    const onEditPost = async (item) => {
+      router.back();
+      router.push({pathname: 'newPost', params: {...item}});
+    }
+
     if(startLoading){
       return (
         <View style={styles.center}>
@@ -125,7 +140,16 @@ const PostDetails = () => {
 
       <View style={styles.container}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
-          <PostCard item={{...post, comments: [{count: post?.comments?.length}]}} currentUser={user} router={router} hasShadow={false} showMoreIcon={false}/>
+          <PostCard item={{...post, comments: [{count: post?.comments?.length}]}} 
+          currentUser={user}
+          router={router} 
+          hasShadow={false} 
+          showMoreIcon={false}
+          showDelete={true}
+          onDelete={onDeletePost}
+          onEdit={onEditPost}
+
+          />
 
           {/* comment input  */}
           <View style={styles.inputContainer}>

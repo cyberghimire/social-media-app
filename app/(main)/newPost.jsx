@@ -1,8 +1,8 @@
 // import { Video } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Icon from '../../assets/icons';
 import Avatar from '../../components/Avatar';
@@ -18,12 +18,23 @@ import { createOrUpdatePost } from '../../services/postService';
 
 
 const NewPost = () => {
+  const post = useLocalSearchParams();
   const router = useRouter();
   const user = useAuth();
   const bodyRef = useRef("");
   const editorRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(file);
+
+  useEffect(() => {
+    if(post && post.id){
+      bodyRef.current = post.body;
+      setFile(post.file || null);
+      setTimeout(() => {
+        editorRef?.current?.setContentHTML(post.body);
+      }, 300)
+    }
+  }, [])
 
   const onPick = async (isImage) => {
     let mediaConfig = {
@@ -45,44 +56,49 @@ const NewPost = () => {
         }
   }
 
-  const isLocalFile = file => {
-    if(!file) return null;
-    if(typeof file === 'object') return true;
-    return false;
-  }
-
-  const getFileType = file => {
-    if(!file) return null;
-    if(isLocalFile(file)){
-      return file.type;
+    const isLocalFile = file => {
+      if(!file) return null;
+      if(typeof file === 'object') return true;
+      return false;
     }
-    // check image or video for remote file
-    if(file.includes('postImages')){
-      return 'image';
-    }
-    return 'video';
-  }
 
-  const getFileUri = file => {
+    const getFileType = file => {
+      if(!file) return null;
+      if(isLocalFile(file)){
+        return file.type;
+      }
+      // check image or video for remote file
+      if(file.includes('postImages')){
+        return 'image';
+      }
+      return 'video';
+    }
+
+    const getFileUri = file => {
     if(!file) return null;
     if(isLocalFile(file)){
       return file.uri;
     }
     return getSupabaseFileUrl(file)?.uri;
-  }
+    }
 
-  const onSubmit = async () => {
+    const onSubmit = async () => {
     if(!bodyRef.current && !file){
       Alert.alert("Post", "Please choose an image or add post status");
       return;
     }
+
+    
+    
+    
     let data = {
       file, 
       body: bodyRef.current,
       userId: user?.user.id,
-
     }
 
+    if(post && post.id) data.id = post.id;
+    
     //create post
     setLoading(true);
     let res = await createOrUpdatePost(data);
@@ -165,7 +181,7 @@ const videoPlayer = useVideoPlayer(videoUri, (player) => {
               </View>
               </ScrollView>
             <Button buttonStyle={{height: hp(6.2), bottom: hp(4), marginBottom: 10}}
-            title="Post"
+            title={post && post.id? "Update": "Post"}
             loading={loading}
             hasShadow={false}
             onPress={onSubmit}

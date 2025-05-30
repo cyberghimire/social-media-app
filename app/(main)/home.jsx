@@ -27,9 +27,31 @@ const Home = () => {
     if(payload.eventType === 'INSERT' && payload?.new?.id){
       let newPost = {...payload.new};
       let res = await getUserData(newPost.userId);
+      newPost.postLikes = [];
+      newPost.comments = [{count: 0}];
       newPost.user = res.success? res.data: {};
       setPosts(prevPost=> [newPost, ...prevPost])
 
+    }
+
+    if(payload.eventType=== 'DELETE' && payload.old.id){
+      setPosts(prevPosts => {
+        let updatedPosts = prevPosts.filter(post => post.id !== payload.old.id);
+        return updatedPosts;
+      })
+    }
+
+    if(payload.eventType === 'UPDATE' && payload?.new?.id){
+      setPosts(prevPosts => {
+        let updatedPosts = prevPosts.map(post => {
+          if(post.id === payload.new.id){
+            post.body = payload.new.body;
+            post.file = payload.new.file
+          }
+          return post;
+        });
+        return updatedPosts;
+      })
     }
   }
 
@@ -252,13 +274,14 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
+        marginHorizontal: wp(0),
     },
     header: {
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'space-between',
         marginBottom: 10,
-        marginHorizontal: wp(4),
+        marginHorizontal: wp(7),
     },
     icons: {
         alignItems: 'center',
@@ -269,7 +292,7 @@ const styles = StyleSheet.create({
     },
     listStyle: {
         paddingTop: 20,
-        paddingHorizontal: wp(4),
+        paddingHorizontal: wp(1.5),
     },
     noPosts: {
         color: theme.colors.text,

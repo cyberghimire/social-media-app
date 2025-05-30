@@ -37,6 +37,9 @@ const PostCard = ({
     router,
     hasShadow=true,
     showMoreIcon=true,
+    showDelete = false,
+    onDelete = () => {},
+    onEdit = () => {}
 }) => {
     const shadowStyles = {
         shadowOffset: {
@@ -166,6 +169,20 @@ const PostCard = ({
     };
 
 
+    const handlePostDelete = () => {
+        Alert.alert("Confirm", "Are you sure you want delete?", [
+            {
+                text: 'Cancel',
+                onPress: () => {},
+                style: 'cancel'
+            },
+            {
+                text: 'Delete',
+                onPress: () => onDelete(item),
+                style: 'destructive'
+            }
+        ])
+    }
     
 
     const liked = likes.filter(like => like.userId === currentUser?.id)[0]? true: false;
@@ -197,6 +214,17 @@ const PostCard = ({
                     </TouchableOpacity>
                 )
             }
+
+            {showDelete && currentUser.id === item?.user.id && (
+                <View style={styles.actions}>
+                    <TouchableOpacity onPress={() => onEdit(item)}>
+                        <Icon name='edit' size={hp(2.5)} color={theme.colors.text}/>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handlePostDelete}>
+                        <Icon name='delete' size={hp(2.5)} color={theme.colors.rose}/>
+                    </TouchableOpacity>
+                </View>
+            )}
             
         </View>
         {/* post body and media  */}
@@ -307,7 +335,7 @@ const styles = StyleSheet.create({
         borderWidth: 0.5,
         gap: 10,
         marginBottom: 15,
-        padding: 10,
+        padding: 5,
         paddingVertical: 12,
         shadowColor: '#000000',
     },
