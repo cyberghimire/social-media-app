@@ -1,4 +1,4 @@
-import { SafeAreaView, StatusBar, View } from 'react-native';
+import { SafeAreaView, StatusBar, View } from "react-native";
 
 const ScreenWrapper = ({ children, bg }) => {
   return (

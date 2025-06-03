@@ -160,7 +160,7 @@ const PostCard = ({
         }
         try {
             const asset = await MediaLibrary.createAssetAsync(fileUri);
-            await MediaLibrary.createAlbumAsync("LinkUp Downloads", asset, false);
+            await MediaLibrary.createAlbumAsync("MemeWave Downloads", asset, false);
             Alert.alert("Success", "Image saved to your gallery.");
         } catch (err) {
             console.error("Error saving image:", err);

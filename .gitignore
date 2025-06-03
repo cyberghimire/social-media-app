@@ -39,3 +39,6 @@ yarn-error.*
 app-example
 
 # /constants/index.js
+
+android/gradle.properties
+android/app/my-upload-key.keystore

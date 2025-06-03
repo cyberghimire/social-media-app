@@ -7,7 +7,11 @@
     "icon": "./assets/images/icon.png",
     "scheme": "memewave",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
+    "assetBundlePatterns": ["**/*"],
+    "_internal": {
+      "projectRoot": "./"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -26,6 +30,7 @@
     },
     "plugins": [
       "expo-router",
+
       [
         "expo-splash-screen",
         {
